@@ -64,8 +64,8 @@ public class CommandHandler extends Thread {
 			}
 			else{
 				try{
-					int id=Integer.parseInt(args[1]);
-					doKill(id);
+					
+					doKill(args[1]);
 				}
 				catch(NumberFormatException e){
 					System.err.println(e.toString());
@@ -92,8 +92,9 @@ public class CommandHandler extends Thread {
 		/**
 		 * print to output list of crawlers
 		 */
+		out.print(crawlers);
 	}
-	private void doKill(int id){
+	private void doKill(String id){
 		SC.killCrawler(id);
 		
 		

@@ -4,7 +4,7 @@
  */
 public interface SearchController {
 	
-	public void killCrawler(int id);
+	public void killCrawler(String id);
 	
 	public String[] getCrawlerList();
 	
