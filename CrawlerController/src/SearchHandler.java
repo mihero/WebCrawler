@@ -28,6 +28,7 @@ public class SearchHandler extends UnicastRemoteObject implements
 	private UrlCollection urlData;
 	private int crawlerMax;
 	static final int IDLENGHT = 8;
+	private int dataDepthMax;
 
 	private String createRandomString(int length) {
 		Random random = new Random();
@@ -46,6 +47,7 @@ public class SearchHandler extends UnicastRemoteObject implements
 		crawlers = new HashMap<String, Crawler>();
 		urlData = new UrlCollection();
 		crawlerMax = 10; // default value
+		dataDepthMax = 5; //default value
 	}
 
 	/**
@@ -69,8 +71,16 @@ public class SearchHandler extends UnicastRemoteObject implements
 			return false;
 		}
 		else if (crawlers.containsKey(worker.getId())){
-			worker.setState(Crawler.States.WAITING);
-			return urlData.hasFreeURL();
+			if(urlData.getDepth()>=dataDepthMax){
+				worker.setState(Crawler.States.WAITING);
+				worker.setCommand(Crawler.Commands.KILL);
+				return false;
+			}
+			else{
+				worker.setState(Crawler.States.WAITING);
+			
+				return urlData.hasFreeURL();
+			}
 		}
 		else{
 			System.err.println("invalid worker id:"+worker.getId());
@@ -86,7 +96,13 @@ public class SearchHandler extends UnicastRemoteObject implements
 	@Override
 	public URL getUrl(Crawler worker) throws RemoteException {
 		// TODO Auto-generated method stub
-		if (crawlers.containsKey(worker.getId())){
+		if (!urlData.hasFreeURL() || urlData.getDepth()>=dataDepthMax){
+			//we are in the end
+			worker.setState(Crawler.States.WAITING);
+			worker.setCommand(Crawler.Commands.KILL);
+			return null;
+		}
+		else if (crawlers.containsKey(worker.getId())){
 			worker.setState(Crawler.States.SEARCHING);
 			worker.setSite(urlData.getFreeURL());
 			return worker.getSite();
@@ -217,6 +233,14 @@ public class SearchHandler extends UnicastRemoteObject implements
 	public int getFoundHits() {
 		// TODO Auto-generated method stub
 		return urlData.size();
+	}
+
+	public int getDataDepthMax() {
+		return dataDepthMax;
+	}
+
+	public void setDataDepthMax(int dataDepthMax) {
+		this.dataDepthMax = dataDepthMax;
 	}
 
 }
