@@ -23,10 +23,13 @@ public class WebCrawlerServer {
 		try {
 			SearchHandler SH = new SearchHandler();
 		
-			ServerSocket SS = new ServerSocket();
+			ServerSocket SS = new ServerSocket(1026);
+			System.out.println("WebCrawler Command socket at:"+SS.getLocalPort());
 			while (true){
 				Socket CS = SS.accept();
 				CommandHandler CH = new CommandHandler(SH, CS);
+				System.out.println("Creating new CommandHandler");
+				CH.start();
 			}
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block

@@ -243,4 +243,15 @@ public class SearchHandler extends UnicastRemoteObject implements
 		this.dataDepthMax = dataDepthMax;
 	}
 
+	@Override
+	public void setSeed(URL seed) {
+		if (urlData.size()!=0){
+			urlData.addURL(seed, null);
+		}
+		else{
+			System.err.println("Setting seed to non-empty");
+		}
+		
+	}
+
 }

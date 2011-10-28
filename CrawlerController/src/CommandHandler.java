@@ -14,13 +14,16 @@ public class CommandHandler extends Thread {
 		LIST,
 		KILL,
 		COUNT,
-		SITES
+		SITES,
+		HELP,
+		QUIT
 		
 	}
 	private Socket client;
 	private SearchController SC;
 	private PrintWriter out;
 	private BufferedReader in;
+	private boolean endThread = false;
 
 	public CommandHandler(SearchController controller, Socket soc){
 		client=soc;
@@ -33,9 +36,10 @@ public class CommandHandler extends Thread {
 		try {
 			out = new PrintWriter(client.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-		
+			doGreeting();
 			String cmd;
-	        while((cmd=in.readLine()) != null){
+	        while(!endThread && (cmd=in.readLine()) != null){
+	        	System.out.println(cmd);
 	        	handleCommand(cmd);
 	        }
         
@@ -48,42 +52,55 @@ public class CommandHandler extends Thread {
 	}
 	
 	
-	private void handleCommand(String cmd){
+	private void handleCommand(String cmd) throws IOException{
 		
 		String[] args = cmd.split(" ");
-		Commands command = Commands.valueOf(args[0].toUpperCase());
-		
-		switch (command){
-		case LIST:
-			doList();
+		try{
+			Commands command = Commands.valueOf(args[0].toUpperCase());
 			
-			break;
-		case KILL:
-			if (args.length<2){
-				doInvalid();
-			}
-			else{
-				try{
-					
-					doKill(args[1]);
-				}
-				catch(NumberFormatException e){
-					System.err.println(e.toString());
+			switch (command){
+			case LIST:
+				doList();
+				
+				break;
+			case KILL:
+				if (args.length<2){
 					doInvalid();
 				}
-				
-			}
+				else{
+					try{
 						
-			break;
-		case COUNT:
-			doCount();
-			break;
-		case SITES:
-			doSiteCount();
-			break;
-		default:
+						doKill(args[1]);
+					}
+					catch(NumberFormatException e){
+						System.err.println(e.toString());
+						doInvalid();
+					}
+					
+				}
+							
+				break;
+			case COUNT:
+				doCount();
+				break;
+			case SITES:
+				doSiteCount();
+				break;
+			case HELP:
+				doHelp();
+				break;
+			case QUIT:
+				client.close();
+				endThread=true;
+				break;
+			default:
+				doInvalid();
+				break;
+			}
+		}
+		catch(IllegalArgumentException e){
+			e.printStackTrace();
 			doInvalid();
-			break;
 		}
 		
 	}
@@ -92,6 +109,7 @@ public class CommandHandler extends Thread {
 		/**
 		 * print to output list of crawlers
 		 */
+		out.println("WebCrawler workers "+crawlers.length);
 		out.print(crawlers);
 	}
 	private void doKill(String id){
@@ -100,13 +118,28 @@ public class CommandHandler extends Thread {
 		
 	}
 	private void doCount(){
-		SC.getNumberOfCrawlers();
+		out.println("Active workers currently"+SC.getNumberOfCrawlers());
 		
 	}
 	private void doSiteCount(){
-		SC.getFoundHits();
+		out.println("Found sites so far \n" + SC.getFoundHits());
 	}
 	private void doInvalid(){
+		out.println("Command was invalid use help");
+		doHelp();
 		
+	}
+	private void doHelp(){
+		out.println("Valid commands are these");
+		Commands[] tmp = Commands.values();
+ 		for (int i=0; i<tmp.length; i++){
+ 			out.println(tmp[i].toString());
+ 		}
+		
+		
+	}
+	private void doGreeting(){
+		out.println("Welcome to WebCrawler system");
+		out.println("Created by Mikko Rosten");
 	}
 }
