@@ -1,7 +1,15 @@
 import static org.junit.Assert.*;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 
 import org.junit.After;
@@ -14,10 +22,7 @@ import org.junit.Test;
  * @author Teemu Miettinen tpjmie@utu.fi
  */
 
-/**
- * @author mihero
- *
- */
+
 public class SearchHandlerTest {
 	private SearchHandler SH;
 	private Crawler C;
@@ -165,6 +170,53 @@ public class SearchHandlerTest {
 		
 		//fail("Not yet implemented"); // TODO
 	}
+	
+	@Test
+	public void testRMI() throws RemoteException, MalformedURLException, NotBoundException{
+		rmiStarter(SearchHandler.class);
+		Naming.rebind("SearchHandler", SH);
+		//System.setSecurityManager(new RMISecurityManager());
+		SearchProvider SP = (SearchProvider)Naming.lookup(new String("rmi://localhost/SearchHandler"));
+		
+	}
+	
+	/**
+    *
+    * @param clazzToAddToServerCodebase a class that should be in the java.rmi.server.codebase property.
+    */
+   public void rmiStarter(Class clazzToAddToServerCodebase) {
+
+       System.setProperty("java.rmi.server.codebase", clazzToAddToServerCodebase
+           .getProtectionDomain().getCodeSource().getLocation().toString());
+
+       System.setProperty("java.security.policy", getLocationOfPolicyFile());
+
+       if(System.getSecurityManager() == null) {
+           System.setSecurityManager(new SecurityManager());
+       }
+
+       //doCustomRmiHandling();
+   }
+   
+
+   public static String getLocationOfPolicyFile() {
+       try {
+    	   String POLICY_FILE_NAME = "/allow_all.policy";
+           File tempFile = File.createTempFile("SearchHandler", ".policy");
+           InputStream is = SearchHandler.class.getResourceAsStream(POLICY_FILE_NAME);
+           BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+           int read = 0;
+           while((read = is.read()) != -1) {
+               writer.write(read);
+           }
+           writer.close();
+           tempFile.deleteOnExit();
+           return tempFile.getAbsolutePath();
+       }
+       catch(IOException e) {
+           throw new RuntimeException(e);
+       }
+   }
 
 	
 
