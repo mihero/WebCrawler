@@ -54,6 +54,13 @@ public class Crawler implements Serializable {
 	private States state;
 	private Commands command;
 	private URL site;
+	
+	public Crawler(){
+		id = null;
+		state = States.READY;
+		command = Commands.SEARCH;
+		site = null;
+	}
 
 	/**
 	 * @return the site

@@ -121,7 +121,7 @@ public class SearchHandler extends UnicastRemoteObject implements
 	@Override
 	public void addSearchResult(URL[] data, Crawler worker)
 			throws RemoteException {
-		if (crawlers.containsKey(worker.getId())){
+		if (crawlers.containsKey(worker.getId())&& crawlers.get(worker.getId()).getSite()!=null&& crawlers.get(worker.getId()).getState()==Crawler.States.SEARCHING){
 			for (int i = 0;i<data.length;i++){
 				urlData.addURL(data[i],worker.getSite());
 			}
@@ -181,6 +181,7 @@ public class SearchHandler extends UnicastRemoteObject implements
 	public void unRegister(Crawler worker) throws RemoteException {
 		
 		crawlers.remove(worker.getId());
+		worker.setId(null);
 
 	}
 
@@ -245,7 +246,7 @@ public class SearchHandler extends UnicastRemoteObject implements
 
 	@Override
 	public void setSeed(URL seed) {
-		if (urlData.size()!=0){
+		if (urlData.size()==0){
 			urlData.addURL(seed, null);
 		}
 		else{
