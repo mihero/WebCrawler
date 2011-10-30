@@ -52,7 +52,7 @@ public class Crawler implements Serializable {
 
 	private String id;
 	private States state;
-	private Commands command;
+	protected Commands command;
 	private URL site;
 	
 	public Crawler(){
@@ -60,6 +60,15 @@ public class Crawler implements Serializable {
 		state = States.READY;
 		command = Commands.SEARCH;
 		site = null;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "Crawler [id=" + id + ", state=" + state + ", command="
+				+ command + ", site=" + site + "]";
 	}
 
 	/**

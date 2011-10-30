@@ -111,8 +111,8 @@ public class SearchHandlerTest {
 	@Test
 	public void testGetCommand() throws RemoteException {
 		registerCrawler();
-		int i = SH.getCommand(C);
-		assertEquals(Crawler.Commands.SEARCH.ordinal(), i);
+		Crawler.Commands i = SH.getCommand(C);
+		assertEquals(Crawler.Commands.SEARCH, i);
 		assertEquals(Crawler.Commands.SEARCH, C.getCommand());
 		
 		//fail("Not yet implemented"); // TODO

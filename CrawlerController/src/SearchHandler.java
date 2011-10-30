@@ -140,9 +140,9 @@ public class SearchHandler extends UnicastRemoteObject implements
 	 * @see SearchProvider#getCommand(Crawler)
 	 */
 	@Override
-	public int getCommand(Crawler worker) throws RemoteException {
+	public Crawler.Commands getCommand(Crawler worker) throws RemoteException {
 		// TODO Auto-generated method stub
-		return crawlers.get(worker.getId()).getCommand().ordinal();
+		return crawlers.get(worker.getId()).getCommand();
 	}
 
 	/*
@@ -253,6 +253,19 @@ public class SearchHandler extends UnicastRemoteObject implements
 			System.err.println("Setting seed to non-empty");
 		}
 		
+	}
+
+	@Override
+	public void setState(Crawler worker) throws RemoteException {
+		// TODO Auto-generated method stub
+		crawlers.get(worker.getId()).setState(worker.getState());
+		
+	}
+
+	@Override
+	public void setCommand(Crawler worker) throws RemoteException {
+		// TODO Auto-generated method stub
+		crawlers.get(worker.getId()).setCommand(worker.getCommand());
 	}
 
 }

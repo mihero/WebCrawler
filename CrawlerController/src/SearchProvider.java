@@ -4,6 +4,8 @@ import java.rmi.RemoteException;
 
 
 
+
+
 /**
  * @author Mikko Rosten mikko.rosten@iki.fi
  * @author Teemu Miettinen tpjmie@utu.fi
@@ -39,7 +41,7 @@ public interface SearchProvider extends Remote {
 	 * @return command what to do (search, kill, status)
 	 * @throws RemoteException
 	 */
-	public int getCommand(Crawler worker) throws RemoteException;
+	public Crawler.Commands getCommand(Crawler worker) throws RemoteException;
 	
 	/**
 	 * Register to provider
@@ -55,4 +57,19 @@ public interface SearchProvider extends Remote {
 	 * @throws RemoteException
 	 */
 	public void unRegister(Crawler worker) throws RemoteException;
+	
+	/**
+	 * Update state
+	 * @param worker
+	 * @throws RemoteException
+	 */
+	public void setState(Crawler worker) throws RemoteException;
+	
+	/**
+	 * 
+	 * Update command info
+	 * @param worker
+	 * @throws RemoteException
+	 */
+	public void setCommand(Crawler worker) throws RemoteException;
 }
