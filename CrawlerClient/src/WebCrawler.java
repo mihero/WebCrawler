@@ -27,7 +27,7 @@ public class WebCrawler extends Crawler {
 	 */
 	public WebCrawler(String url) throws MalformedURLException, RemoteException, NotBoundException {
 		// TODO Auto-generated constructor stub
-		
+		super();
 		SP = (SearchProvider)Naming.lookup(url+"/SearchHandler");
 		String id = SP.register(this);
 		setId(id);
@@ -123,7 +123,7 @@ public class WebCrawler extends Crawler {
 			//e.printStackTrace();
 		}
 		catch (NullPointerException e){
-			command = oldCmd;
+			super.setCommand(oldCmd);
 			System.err.println("Error setting command");
 		}
 	}

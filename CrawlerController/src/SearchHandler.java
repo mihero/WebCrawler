@@ -98,14 +98,16 @@ public class SearchHandler extends UnicastRemoteObject implements
 		// TODO Auto-generated method stub
 		if (!urlData.hasFreeURL() || urlData.getDepth()>=dataDepthMax){
 			//we are in the end
-			worker.setState(Crawler.States.WAITING);
-			worker.setCommand(Crawler.Commands.KILL);
+			//worker.setState(Crawler.States.WAITING);
+			//worker.setCommand(Crawler.Commands.KILL);
 			return null;
 		}
 		else if (crawlers.containsKey(worker.getId())){
-			worker.setState(Crawler.States.SEARCHING);
-			worker.setSite(urlData.getFreeURL());
-			return worker.getSite();
+			Crawler obj=crawlers.get(worker.getId());
+			
+			obj.setState(Crawler.States.SEARCHING);
+			obj.setSite(urlData.getFreeURL());
+			return obj.getSite();
 		}
 		else{
 			System.err.println("Illegal worker id:" + worker.getId());
@@ -125,8 +127,12 @@ public class SearchHandler extends UnicastRemoteObject implements
 			for (int i = 0;i<data.length;i++){
 				urlData.addURL(data[i],worker.getSite());
 			}
-			worker.setSite(null);
-			worker.setState(Crawler.States.READY);
+			Crawler obj=crawlers.get(worker.getId());
+			
+			obj.setState(Crawler.States.READY);
+			obj.setSite(null);
+			obj.setCommand(Crawler.Commands.SEARCH);
+			
 		}
 		else{
 			System.err.println("Illegal worker id:" + worker.getId());
@@ -142,7 +148,14 @@ public class SearchHandler extends UnicastRemoteObject implements
 	@Override
 	public Crawler.Commands getCommand(Crawler worker) throws RemoteException {
 		// TODO Auto-generated method stub
-		return crawlers.get(worker.getId()).getCommand();
+		System.out.println("Worker getting command "+worker.getId());
+		try{
+			return crawlers.get(worker.getId()).getCommand();
+		}
+		catch(NullPointerException e){
+			System.err.println("No worker for " +worker.getId());
+			return null;
+		}
 	}
 
 	/*
@@ -161,9 +174,10 @@ public class SearchHandler extends UnicastRemoteObject implements
 			while(crawlers.containsKey(newId)){newId=createRandomString(IDLENGHT);}
 			worker.setId(newId);
 			//set to default state
+			worker.setCommand(Crawler.Commands.SEARCH);
 			worker.setState(Crawler.States.READY);
 			worker.setSite(null);
-			crawlers.put(worker.getId(), worker);
+			crawlers.put(worker.getId(), new Crawler(worker));
 			return worker.getId();
 		}
 		else{
@@ -258,14 +272,28 @@ public class SearchHandler extends UnicastRemoteObject implements
 	@Override
 	public void setState(Crawler worker) throws RemoteException {
 		// TODO Auto-generated method stub
-		crawlers.get(worker.getId()).setState(worker.getState());
+		try{
+			if (crawlers.containsKey(worker.getId())){
+				crawlers.get(worker.getId()).setState(worker.getState());
+			}
+		}
+		catch(NullPointerException e){
+			System.err.print(worker.toString());
+		}
 		
 	}
 
 	@Override
 	public void setCommand(Crawler worker) throws RemoteException {
 		// TODO Auto-generated method stub
-		crawlers.get(worker.getId()).setCommand(worker.getCommand());
+		try{
+			if (crawlers.containsKey(worker.getId())){
+				crawlers.get(worker.getId()).setCommand(worker.getCommand());
+			}
+		}
+		catch(NullPointerException e){
+			System.err.print(worker.toString());
+		}
 	}
 
 }
