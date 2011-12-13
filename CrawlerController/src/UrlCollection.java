@@ -83,6 +83,7 @@ public class UrlCollection {
 	public synchronized boolean hasFreeURL(){
 		try{
 			while(using||adding){wait();}
+			System.out.println("FreeUrl state "+ position+"/"+hits.size());
 			return position<hits.size()-1;
 		}
 		catch(InterruptedException e){
@@ -119,19 +120,41 @@ public class UrlCollection {
 	public int getDepth(){
 		try{
 			while(adding){wait();}
-			
-			int res=0;
-			for (int i=0; i<hits.size();i++){
-				if(relations.elementAt(i).size()>res){
-					res=relations.elementAt(i).size();
-				}
+			if (relations.size()==0){
+				return 0;
 			}
-			return res;
+
+			return relationDepth(0);
 		}
 		catch(InterruptedException e){
 			e.printStackTrace();
 			return 0;
 		}
+	}
+	
+	private int relationDepth(int index){
+		try{
+			while(adding){wait();}
+			if (relations.elementAt(index).size()==0){
+				return 0;
+			}
+			else{
+				int maxDepth=0;
+				for (int i=0;i<relations.elementAt(index).size();i++){
+					int depth=relationDepth(relations.elementAt(index).get(i));
+					if (depth>maxDepth){
+						maxDepth=depth;
+					}
+					
+				}
+				return maxDepth+1;
+			}
+		}
+		catch(InterruptedException e){
+			e.printStackTrace();
+			return 0;
+		}
+		
 	}
 	
 	/**
@@ -155,10 +178,14 @@ public class UrlCollection {
 	}
 	
 	private String treePrint(int depth, int index){
+		if(relations.size()<index+1){
+			return null;
+		}
 		LinkedList<Integer> childs = relations.elementAt(index);
 		String tmp = new String();
-		
-		tmp = String.format("%1$-"+depth+"s%n", hits.elementAt(index).toString());
+		int pad = depth+hits.elementAt(index).toString().length();
+		String format="%1$#"+ pad+"s\n";
+		tmp = String.format(format, hits.elementAt(index).toString());
 		
 		for (Iterator<Integer> i=childs.iterator();i.hasNext();){
 			int next=i.next();

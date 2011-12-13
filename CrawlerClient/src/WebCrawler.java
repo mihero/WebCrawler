@@ -5,10 +5,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.sql.Time;
+import java.util.Vector;
+import java.net.*;
+import java.io.*;
 
 /**
  * @author mihero
@@ -18,7 +22,8 @@ public class WebCrawler extends Crawler {
 	
 	private SearchProvider SP;
 	private long executionTime;
-	private static final long WAITTIME = 1000;
+	private static final long WAITTIME = 30000;
+	static final int HTTP=80; // http port
 	/**
 	 * @throws NotBoundException 
 	 * @throws RemoteException 
@@ -70,9 +75,18 @@ public class WebCrawler extends Crawler {
 					if(SP.hasSearchable(this)){
 						
 						URL url = SP.getUrl(this);
+						System.out.println("site to search "+url.toString());
 						if (url!=null){
 							setSite(url);
-							doSiteSearch();
+							try {
+								doSiteSearch();
+							} catch (UnknownHostException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 						}
 					}
 				}
@@ -97,9 +111,65 @@ public class WebCrawler extends Crawler {
 			executionTime=System.currentTimeMillis();
 		}
 	}
-	private void doSiteSearch() {
+	private void doSiteSearch() throws UnknownHostException, IOException {
 		// TODO Auto-generated method stub
 		setState(States.SEARCHING);
+		
+		// Create socket connection to a server (hostname: args[0])
+	    Socket s = new Socket(getSite().getHost() , HTTP);
+
+	    // Open write channel to the server
+	    BufferedWriter sout = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
+
+	    // Make the GET-command
+	    sout.write("GET "+getSite().getPath() + " HTTP/1.0");
+	    sout.newLine();
+	    sout.write("Accept: text/plain, text/html, text/*");
+	    sout.newLine();
+
+	    // Make HOST-command
+	    sout.write("Host: "+getSite().getHost());
+	    sout.newLine();
+
+	    // HTTP-protocol requires one empty line
+	    sout.newLine();
+
+	    // Send everything over the network
+	    sout.flush();
+
+	    // Open a connection for reading the response
+	    BufferedReader sin = new BufferedReader(new InputStreamReader(s.getInputStream()));
+
+	    // Go through the response
+	    String line = " ";
+	    Vector<URL> urls = new Vector<URL>();
+	    while ((line=sin.readLine()) != null){
+		// Print only lines containing the mark '@'
+		//	if (line.indexOf('@') != -1)
+	    	System.out.println(line);
+	    	int hrefpos=line.indexOf("href=");
+	    	if(hrefpos>0){
+		    	int startpos=line.indexOf('"',hrefpos+4)+1;
+		    	int stoppos=line.indexOf('"',startpos);
+		    	if(startpos<stoppos && startpos>0 && stoppos>0){
+		    		String url=line.substring(startpos,stoppos);
+		    		System.out.println(url);
+		    		try{
+		    			urls.add(new URL(url));
+		    		}
+		    		catch(MalformedURLException e){
+		    			System.out.println(url);
+		    		}
+		    	}
+	    	}
+		    
+	    }
+	    // Close connections (after a timeout)
+	    sout.close();
+	    sin.close();
+	    s.close();
+		SP.addSearchResult((URL[]) urls.toArray(new URL[0]), this);
+		setState(States.READY);
 		
 	}
 	

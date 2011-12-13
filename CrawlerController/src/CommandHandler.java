@@ -3,6 +3,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.URL;
+import java.util.Arrays;
 
 /**
  * @author Mikko Rosten mikko.rosten@iki.fi
@@ -16,7 +18,9 @@ public class CommandHandler extends Thread {
 		COUNT,
 		SITES,
 		HELP,
-		QUIT
+		QUIT,
+		SEED,
+		TREE
 		
 	}
 	private Socket client;
@@ -93,6 +97,17 @@ public class CommandHandler extends Thread {
 				client.close();
 				endThread=true;
 				break;
+			case SEED:
+				try{
+					SC.setSeed(new URL(args[1]));
+				}
+				catch (IllegalArgumentException e){
+					doInvalid();
+				}
+				break;
+			case TREE:
+				doTree();
+				break;
 			default:
 				doInvalid();
 				break;
@@ -104,13 +119,19 @@ public class CommandHandler extends Thread {
 		}
 		
 	}
+	private void doTree() {
+		// TODO Auto-generated method stub
+		out.println("Current Search Tree");
+		out.println(SC.getSearchTree());
+		out.println("Size is "+SC.getFoundHits()+" and depth is "+SC.getDepth());
+	}
 	private void doList(){
 		String[] crawlers=SC.getCrawlerList();
 		/**
 		 * print to output list of crawlers
 		 */
 		out.println("WebCrawler workers "+crawlers.length);
-		out.print(crawlers);
+		out.println(Arrays.toString(crawlers));
 	}
 	private void doKill(String id){
 		SC.killCrawler(id);
@@ -123,6 +144,7 @@ public class CommandHandler extends Thread {
 	}
 	private void doSiteCount(){
 		out.println("Found sites so far \n" + SC.getFoundHits());
+		out.println("Depth of search is "+SC.getDepth());
 	}
 	private void doInvalid(){
 		out.println("Command was invalid use help");

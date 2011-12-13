@@ -29,7 +29,11 @@ public class WebCrawlerServer {
 		 */
 		try {
 			rmiStarter(SearchHandler.class);
-			SearchHandler SH = new SearchHandler();
+			SearchHandler SH;
+			if (args[0]!=null)
+				SH = new SearchHandler(args[0]);
+			else
+				SH = new SearchHandler();
 			Naming.rebind("SearchHandler", SH);
 		
 			ServerSocket SS = new ServerSocket(1026);

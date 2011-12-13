@@ -14,5 +14,9 @@ public interface SearchController {
 	
 	public int getFoundHits();
 	
+	public int getDepth();
+	
+	public String getSearchTree();
+	
 	public void setSeed(URL seed);
 }

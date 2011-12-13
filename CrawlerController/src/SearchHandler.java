@@ -1,6 +1,8 @@
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
@@ -27,7 +29,7 @@ public class SearchHandler extends UnicastRemoteObject implements
 	private HashMap<String,Crawler> crawlers;
 	private UrlCollection urlData;
 	private int crawlerMax;
-	static final int IDLENGHT = 8;
+	static final int IDLENGHT = 2;
 	private int dataDepthMax;
 
 	private String createRandomString(int length) {
@@ -48,6 +50,15 @@ public class SearchHandler extends UnicastRemoteObject implements
 		urlData = new UrlCollection();
 		crawlerMax = 10; // default value
 		dataDepthMax = 5; //default value
+	}
+	public SearchHandler(String seed)throws RemoteException {
+		this();
+		try {
+			setSeed(new URL(seed));
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -71,6 +82,7 @@ public class SearchHandler extends UnicastRemoteObject implements
 			return false;
 		}
 		else if (crawlers.containsKey(worker.getId())){
+			System.out.println("Has free url "+worker.getId()+" depth "+urlData.getDepth());
 			if(urlData.getDepth()>=dataDepthMax){
 				worker.setState(Crawler.States.WAITING);
 				worker.setCommand(Crawler.Commands.KILL);
@@ -103,14 +115,16 @@ public class SearchHandler extends UnicastRemoteObject implements
 			return null;
 		}
 		else if (crawlers.containsKey(worker.getId())){
+			System.out.println("Getting new url");
 			Crawler obj=crawlers.get(worker.getId());
 			
 			obj.setState(Crawler.States.SEARCHING);
 			obj.setSite(urlData.getFreeURL());
+			System.out.println("Getting new url "+obj.getSite().toString());
 			return obj.getSite();
 		}
 		else{
-			System.err.println("Illegal worker id:" + worker.getId());
+			System.err.println("GetUrl Illegal worker id:" + worker.getId());
 			return null;
 		}
 	}
@@ -135,7 +149,9 @@ public class SearchHandler extends UnicastRemoteObject implements
 			
 		}
 		else{
-			System.err.println("Illegal worker id:" + worker.getId());
+			System.err.println(Arrays.toString(getCrawlerList()));
+			System.err.println(worker.toString());
+			System.err.println("AddSearchResult Illegal worker id:" + worker.getId());
 		}
 
 	}
@@ -224,8 +240,9 @@ public class SearchHandler extends UnicastRemoteObject implements
 		while(i.hasNext()){
 			sb.add(new String(i.next()));
 		}
-		
-		return (String[])sb.toArray(new String[0]);
+		String[] arr= new String[sb.size()];
+		sb.toArray(arr);
+		return arr;
 	}
 
 	/*
@@ -294,6 +311,18 @@ public class SearchHandler extends UnicastRemoteObject implements
 		catch(NullPointerException e){
 			System.err.print(worker.toString());
 		}
+	}
+
+	@Override
+	public int getDepth() {
+		// TODO Auto-generated method stub
+		return urlData.getDepth();
+	}
+
+	@Override
+	public String getSearchTree() {
+		// TODO Auto-generated method stub
+		return urlData.getURLTree();
 	}
 
 }

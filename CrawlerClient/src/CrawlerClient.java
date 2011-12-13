@@ -18,6 +18,9 @@ public class CrawlerClient {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		try {
+			//int depth=3;
+			//String test = Integer.toString(depth);
+			//System.out.println(test);
 			rmiStarter(WebCrawler.class);
 			WebCrawler WC = new WebCrawler("rmi://localhost");
 			while(WC.getCommand()!=Crawler.Commands.KILL){
@@ -67,7 +70,7 @@ public class CrawlerClient {
        try {
     	   String POLICY_FILE_NAME = "/allow_all.policy";
            File tempFile = File.createTempFile("SearchHandler", ".policy");
-           InputStream is = SearchHandler.class.getResourceAsStream(POLICY_FILE_NAME);
+           InputStream is = CrawlerClient.class.getResourceAsStream(POLICY_FILE_NAME);
            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
            int read = 0;
            while((read = is.read()) != -1) {
