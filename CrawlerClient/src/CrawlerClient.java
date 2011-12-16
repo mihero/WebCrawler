@@ -26,9 +26,10 @@ public class CrawlerClient {
 			while(WC.getCommand()!=Crawler.Commands.KILL){
 				WC.checkCommand();
 				System.out.println("Sleeping...");
-				Thread.sleep(500);
+				Thread.sleep(50);
 				
 			}
+			WC.doKill();
 			System.out.println("Closing Crawler client, bye.");
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block

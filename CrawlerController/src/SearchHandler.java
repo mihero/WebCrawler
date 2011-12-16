@@ -3,11 +3,15 @@ import java.net.URL;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 
@@ -26,17 +30,20 @@ import java.util.Vector;
 public class SearchHandler extends UnicastRemoteObject implements
 		SearchController, SearchProvider {
 
-	private HashMap<String,Crawler> crawlers;
+	
 	private UrlCollection urlData;
 	private int crawlerMax;
 	static final int IDLENGHT = 2;
 	private int dataDepthMax;
+	private CrawlerStorage crawlers;
 
 	private String createRandomString(int length) {
 		Random random = new Random();
 		StringBuilder sb = new StringBuilder();
+		
 		while (sb.length() < length) {
-			sb.append(Integer.toHexString(random.nextInt()));
+			
+			sb.append(Integer.toHexString(random.nextInt(16)));
 		}
 		return sb.toString();
 	}
@@ -45,8 +52,8 @@ public class SearchHandler extends UnicastRemoteObject implements
 	 * @throws RemoteException
 	 */
 	public SearchHandler() throws RemoteException {
-		// TODO Auto-generated constructor stub
-		crawlers = new HashMap<String, Crawler>();
+		
+		crawlers = new CrawlerStorage();
 		urlData = new UrlCollection();
 		crawlerMax = 10; // default value
 		dataDepthMax = 5; //default value
@@ -81,11 +88,11 @@ public class SearchHandler extends UnicastRemoteObject implements
 			System.err.println("worker allready searching id:"+worker.getId());
 			return false;
 		}
-		else if (crawlers.containsKey(worker.getId())){
-			System.out.println("Has free url "+worker.getId()+" depth "+urlData.getDepth());
+		else if (crawlers.isValid(worker)){
+			//System.out.println("Has free url "+worker.getId()+" depth "+urlData.getDepth());
 			if(urlData.getDepth()>=dataDepthMax){
-				worker.setState(Crawler.States.WAITING);
-				worker.setCommand(Crawler.Commands.KILL);
+				//worker.setState(Crawler.States.WAITING);
+				//worker.setCommand(Crawler.Commands.KILL);
 				return false;
 			}
 			else{
@@ -114,13 +121,13 @@ public class SearchHandler extends UnicastRemoteObject implements
 			//worker.setCommand(Crawler.Commands.KILL);
 			return null;
 		}
-		else if (crawlers.containsKey(worker.getId())){
-			System.out.println("Getting new url");
-			Crawler obj=crawlers.get(worker.getId());
+		else if (crawlers.isValid(worker)){
+			//System.out.println("Getting new url");
+			Crawler obj=crawlers.get(worker);
 			
 			obj.setState(Crawler.States.SEARCHING);
 			obj.setSite(urlData.getFreeURL());
-			System.out.println("Getting new url "+obj.getSite().toString());
+			System.out.println("Getting new url "+obj.getSite().toString()+ " for "+worker.getId());
 			return obj.getSite();
 		}
 		else{
@@ -137,15 +144,22 @@ public class SearchHandler extends UnicastRemoteObject implements
 	@Override
 	public void addSearchResult(URL[] data, Crawler worker)
 			throws RemoteException {
-		if (crawlers.containsKey(worker.getId())&& crawlers.get(worker.getId()).getSite()!=null&& crawlers.get(worker.getId()).getState()==Crawler.States.SEARCHING){
-			for (int i = 0;i<data.length;i++){
-				urlData.addURL(data[i],worker.getSite());
-			}
-			Crawler obj=crawlers.get(worker.getId());
+		//System.out.println(Arrays.toString(getCrawlerList()));
+		if (crawlers.isValid(worker)){
+			Crawler obj=crawlers.get(worker);
+			if (obj.getSite()!=null && obj.getState()==Crawler.States.SEARCHING){
 			
-			obj.setState(Crawler.States.READY);
-			obj.setSite(null);
-			obj.setCommand(Crawler.Commands.SEARCH);
+		
+		
+				for (int i = 0;i<data.length;i++){
+					urlData.addURL(data[i],worker.getSite());
+				}
+				
+				
+				obj.setState(Crawler.States.READY);
+				obj.setSite(null);
+				obj.setCommand(Crawler.Commands.SEARCH);
+			}
 			
 		}
 		else{
@@ -164,9 +178,12 @@ public class SearchHandler extends UnicastRemoteObject implements
 	@Override
 	public Crawler.Commands getCommand(Crawler worker) throws RemoteException {
 		// TODO Auto-generated method stub
-		System.out.println("Worker getting command "+worker.getId());
+		//System.out.println("Worker getting command "+worker.getId());
 		try{
-			return crawlers.get(worker.getId()).getCommand();
+			//if (getFoundHits()>50){
+				System.gc();
+			//}
+			return crawlers.get(worker).getCommand();
 		}
 		catch(NullPointerException e){
 			System.err.println("No worker for " +worker.getId());
@@ -187,13 +204,14 @@ public class SearchHandler extends UnicastRemoteObject implements
 		}
 		if (worker.getId()==null){
 			String newId=createRandomString(IDLENGHT);
-			while(crawlers.containsKey(newId)){newId=createRandomString(IDLENGHT);}
+			while(crawlers.hasWorker(newId)){newId=createRandomString(IDLENGHT);}
 			worker.setId(newId);
 			//set to default state
 			worker.setCommand(Crawler.Commands.SEARCH);
 			worker.setState(Crawler.States.READY);
 			worker.setSite(null);
-			crawlers.put(worker.getId(), new Crawler(worker));
+			//Crawler tmp = new Crawler(worker);
+			crawlers.add( new Crawler(worker));
 			return worker.getId();
 		}
 		else{
@@ -210,7 +228,7 @@ public class SearchHandler extends UnicastRemoteObject implements
 	@Override
 	public void unRegister(Crawler worker) throws RemoteException {
 		
-		crawlers.remove(worker.getId());
+		crawlers.remove(worker);
 		worker.setId(null);
 
 	}
@@ -234,15 +252,8 @@ public class SearchHandler extends UnicastRemoteObject implements
 	 */
 	@Override
 	public String[] getCrawlerList() {
-		Vector<String> sb = new Vector<String>();
 		
-		Iterator<String> i= crawlers.keySet().iterator();
-		while(i.hasNext()){
-			sb.add(new String(i.next()));
-		}
-		String[] arr= new String[sb.size()];
-		sb.toArray(arr);
-		return arr;
+		return crawlers.getCrawlerList();
 	}
 
 	/*
@@ -290,7 +301,7 @@ public class SearchHandler extends UnicastRemoteObject implements
 	public void setState(Crawler worker) throws RemoteException {
 		// TODO Auto-generated method stub
 		try{
-			if (crawlers.containsKey(worker.getId())){
+			if (crawlers.isValid(worker)){
 				crawlers.get(worker.getId()).setState(worker.getState());
 			}
 		}
@@ -304,7 +315,7 @@ public class SearchHandler extends UnicastRemoteObject implements
 	public void setCommand(Crawler worker) throws RemoteException {
 		// TODO Auto-generated method stub
 		try{
-			if (crawlers.containsKey(worker.getId())){
+			if (crawlers.isValid(worker)){
 				crawlers.get(worker.getId()).setCommand(worker.getCommand());
 			}
 		}

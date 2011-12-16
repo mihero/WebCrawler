@@ -20,9 +20,13 @@ import java.io.*;
  */
 public class WebCrawler extends Crawler {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private SearchProvider SP;
 	private long executionTime;
-	private static final long WAITTIME = 30000;
+	private static final long WAITTIME = 1000;
 	static final int HTTP=80; // http port
 	/**
 	 * @throws NotBoundException 
@@ -42,15 +46,15 @@ public class WebCrawler extends Crawler {
 		System.out.println(getId());
 		
 	}
-	protected void finalize(){
-		try {
-			SP.unRegister(this);
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-	}
+//	protected void finalize(){
+//		try {
+//			//SP.unRegister(this);
+//		} catch (RemoteException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
+//	}
 	public void checkCommand() {
 		
 		try{
@@ -117,6 +121,7 @@ public class WebCrawler extends Crawler {
 		
 		// Create socket connection to a server (hostname: args[0])
 	    Socket s = new Socket(getSite().getHost() , HTTP);
+	    s.setSoTimeout(10000);
 
 	    // Open write channel to the server
 	    BufferedWriter sout = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
@@ -143,10 +148,11 @@ public class WebCrawler extends Crawler {
 	    // Go through the response
 	    String line = " ";
 	    Vector<URL> urls = new Vector<URL>();
+	    Vector<String> domains = new Vector<String>();
 	    while ((line=sin.readLine()) != null){
 		// Print only lines containing the mark '@'
 		//	if (line.indexOf('@') != -1)
-	    	System.out.println(line);
+	    	//System.out.println(line);
 	    	int hrefpos=line.indexOf("href=");
 	    	if(hrefpos>0){
 		    	int startpos=line.indexOf('"',hrefpos+4)+1;
@@ -155,7 +161,13 @@ public class WebCrawler extends Crawler {
 		    		String url=line.substring(startpos,stoppos);
 		    		System.out.println(url);
 		    		try{
-		    			urls.add(new URL(url));
+		    			URL newURL=new URL(url);
+		    			//System.out.println(line);
+		    			if ( !domains.contains(newURL.getHost())&& !newURL.getHost().equalsIgnoreCase( getSite().getHost()) && verifyURL(newURL)){
+		    				urls.add(newURL );
+		    				domains.add(newURL.getHost());
+		    			}
+		    			
 		    		}
 		    		catch(MalformedURLException e){
 		    			System.out.println(url);
@@ -168,6 +180,7 @@ public class WebCrawler extends Crawler {
 	    sout.close();
 	    sin.close();
 	    s.close();
+	    
 		SP.addSearchResult((URL[]) urls.toArray(new URL[0]), this);
 		setState(States.READY);
 		
@@ -215,6 +228,71 @@ public class WebCrawler extends Crawler {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public void doKill() throws RemoteException{
+		SP.unRegister(this);
+	}
+	
+	protected boolean verifyURL(URL uri) throws UnknownHostException{
+		// Create socket connection to a server (hostname: args[0])
+		Socket s;
+		try{
+	    	// Send everything over the network
+			 s = new Socket(uri.getHost() , HTTP);
+			 s.setSoTimeout(5000);
+	    
+		
+
+		    // Open write channel to the server
+		    BufferedWriter sout = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
+	
+		    // Make the GET-command
+		    sout.write("HEAD "+uri.getPath() + " HTTP/1.0");
+		    sout.newLine();
+		    sout.write("Accept: text/plain, text/html, text/*");
+		    sout.newLine();
+	
+		    // Make HOST-command
+		    sout.write("Host: "+uri.getHost());
+		    sout.newLine();
+	
+		    // HTTP-protocol requires one empty line
+		    sout.newLine();
+		    
+		    // Send everything over the network
+		    	sout.flush();
+		    
+		    
+	
+		    // Open a connection for reading the response
+		    BufferedReader sin = new BufferedReader(new InputStreamReader(s.getInputStream()));
+	
+		    // Go through the response
+		    String line = " ";
+		    line=sin.readLine();
+		    //System.out.println(line);
+		    // Close connections (after a timeout)
+		    sout.close();
+		    sin.close();
+		    s.close();
+		    if (line.indexOf("200")!=-1){
+		    	return true;
+		        
+		    }
+		    else{
+		    	return false;
+		    }
+		}
+	    catch (IOException e){
+	    	return false;
+	    }
+		catch (Exception e){
+			e.printStackTrace();
+			return false;
+		}
+	    
+
 	}
 	
 	

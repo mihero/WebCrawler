@@ -9,6 +9,11 @@ import java.net.URL;
  */
 
 public class Crawler implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public enum Commands {
 		KILL,
 		SEARCH
