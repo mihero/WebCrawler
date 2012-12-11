@@ -184,7 +184,7 @@ public class UrlCollection {
 		LinkedList<Integer> childs = relations.elementAt(index);
 		String tmp = new String();
 		int pad = depth+hits.elementAt(index).toString().length();
-		String format="%1$#"+ pad+"s\n";
+		String format="%1$"+ pad+"s\n";
 		tmp = String.format(format, hits.elementAt(index).toString());
 		
 		for (Iterator<Integer> i=childs.iterator();i.hasNext();){

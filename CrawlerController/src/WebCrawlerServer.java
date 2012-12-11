@@ -36,7 +36,7 @@ public class WebCrawlerServer {
 				SH = new SearchHandler();
 			Naming.rebind("SearchHandler", SH);
 		
-			ServerSocket SS = new ServerSocket(1025);
+			ServerSocket SS = new ServerSocket(1026);
 			System.out.println("WebCrawler Command socket at:"+SS.getLocalPort());
 			while (true){
 				Socket CS = SS.accept();

@@ -15,7 +15,8 @@ import java.net.*;
 import java.io.*;
 
 /**
- * @author mihero
+ * Implementation of url collector client
+ * @author mikko.rosten@iki.fi
  *
  */
 public class WebCrawler extends Crawler {

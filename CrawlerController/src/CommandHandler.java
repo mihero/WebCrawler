@@ -7,6 +7,8 @@ import java.net.URL;
 import java.util.Arrays;
 
 /**
+ * Socket listener
+ * Handel inputs and call actual functions
  * @author Mikko Rosten mikko.rosten@iki.fi
  * @author Teemu Miettinen tpjmie@utu.fi
  */
@@ -99,7 +101,12 @@ public class CommandHandler extends Thread {
 				break;
 			case SEED:
 				try{
-					SC.setSeed(new URL(args[1]));
+				    if (args.length<2){
+	                    doInvalid();
+	                }
+				    else {
+				        SC.setSeed(new URL(args[1]));
+				    }
 				}
 				catch (IllegalArgumentException e){
 					doInvalid();

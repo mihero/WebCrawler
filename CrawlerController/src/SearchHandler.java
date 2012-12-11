@@ -19,14 +19,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
+ * Implements control and provider functionality
+ * Collects data into UrlCollection
  * @author Mikko Rosten mikko.rosten@iki.fi
  * @author Teemu Miettinen tpjmie@utu.fi
  */
 
-/**
- * @author mihero
- * 
- */
+
 public class SearchHandler extends UnicastRemoteObject implements
 		SearchController, SearchProvider {
 
@@ -58,6 +57,7 @@ public class SearchHandler extends UnicastRemoteObject implements
 		crawlerMax = 10; // default value
 		dataDepthMax = 5; //default value
 	}
+	
 	public SearchHandler(String seed)throws RemoteException {
 		this();
 		try {
@@ -181,7 +181,7 @@ public class SearchHandler extends UnicastRemoteObject implements
 		//System.out.println("Worker getting command "+worker.getId());
 		try{
 			//if (getFoundHits()>50){
-				System.gc();
+			//	System.gc();
 			//}
 			return crawlers.get(worker).getCommand();
 		}
@@ -211,6 +211,7 @@ public class SearchHandler extends UnicastRemoteObject implements
 			worker.setState(Crawler.States.READY);
 			worker.setSite(null);
 			//Crawler tmp = new Crawler(worker);
+			//add copy of worker into list
 			crawlers.add( new Crawler(worker));
 			return worker.getId();
 		}
@@ -240,7 +241,7 @@ public class SearchHandler extends UnicastRemoteObject implements
 	 */
 	@Override
 	public void killCrawler(String id) {
-		
+	    System.out.println("Kill crawler "+id);
 		crawlers.get(id).setCommand(Crawler.Commands.KILL);
 
 	}

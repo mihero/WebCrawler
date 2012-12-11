@@ -126,7 +126,11 @@ public class Crawler implements Serializable {
 	}
 
 	public void setCommand(Commands cmd) {
-		command=cmd;
+	    System.out.println("Set command "+cmd);
+	    //if already in kill mode don't change
+		if (command!=Commands.KILL){
+		    command=cmd;
+		}
 		
 	}
 
